@@ -5,8 +5,10 @@ import "./index.css";
 class Board extends React.Component {
   render() {
     return (
-      <button className="square" onClick={this.props.onClick}>
-        {this.props.value}
+      <button
+        className={"square" + (this.props.isWinner ? " winner" : "")}
+        onClick={this.props.onClick}>
+          {this.props.value}
       </button>
     );
   }

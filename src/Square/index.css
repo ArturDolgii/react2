@@ -17,6 +17,10 @@
   outline: none;
 }
 
+.square.winner {
+  color: green;
+}
+
 .kbd-navigation .square:focus {
   background: #ddd;
 }
