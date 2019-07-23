@@ -11,28 +11,30 @@ class Game extends React.Component {
         {
           squares: Array(9).fill(null),
           axis: { y : null, x: null },
+          index: 0
         }
       ],
       activeIndex: 0,
+      sort: "ASC",
       xIsNext: true
     };
   }
 
   handleClick(i) {
-    const history = this.state.history.filter((item, i) => i <= this.state.activeIndex);
-    const current = history[history.length - 1];
+    const history = this.state.history.slice().filter(item => item.index <= this.state.activeIndex);
+    const current = history.filter(item => item.index === this.state.activeIndex)[0];
     const squares = current.squares.slice();
     if (calculateWinner(squares) || squares[i]) {
       return;
     }
     squares[i] = this.state.xIsNext ? "X" : "O";
+    const newItem = [{
+      squares: squares,
+      axis: this.getAxis(i),
+      index: history.length
+    }];
     this.setState({
-      history: history.concat([
-        {
-          squares: squares,
-          axis: this.getAxis(i)
-        }
-      ]),
+      history: this.state.sort === "ASC" ? [...history, ...newItem] : [...newItem, ...history],
       activeIndex: this.state.activeIndex + 1,
       xIsNext: !this.state.xIsNext
     });
@@ -52,20 +54,27 @@ class Game extends React.Component {
     });
   }
 
+  switchSortTo(sort) {
+    this.setState({
+      sort,
+      history: this.state.history.slice().reverse()
+    });
+  }
+
   render() {
     const history = this.state.history;
-    const current = history.filter((item, i) => i === this.state.activeIndex)[0];
+    const current = history.filter(item => item.index === this.state.activeIndex)[0];
     const winner = calculateWinner(current.squares);
 
-    const moves = history.map((step, move) => {
-      const isActive = this.state.activeIndex === move;
-      const desc = move ?
-        `Go to move #${move} (${step.axis.y}x${step.axis.x})` :
+    const moves = history.map(step => {
+      const isActive = this.state.activeIndex === step.index;
+      const desc = step.index ?
+        `Go to move #${step.index} (${step.axis.y}x${step.axis.x})` :
         'Go to game start';
       return (
-        <li key={move}>
+        <li key={step.index}>
           <button
-            onClick={() => this.jumpTo(move)}
+            onClick={() => this.jumpTo(step.index)}
             style={{fontWeight: isActive ? "bold" : ""}}>
               {desc}
             </button>
@@ -80,6 +89,17 @@ class Game extends React.Component {
       status = "Next player: " + (this.state.xIsNext ? "X" : "O");
     }
 
+    let switcher;
+    if (history.length > 1) {
+      let button;
+      if (this.state.sort === "ASC") {
+        button = <button onClick={() => this.switchSortTo("DESC")}>DESC</button>;
+      } else {
+        button = <button onClick={() => this.switchSortTo("ASC")}>ASC</button>;
+      }
+      switcher = <div>Sort: {button}</div>;
+    }
+
     return (
       <div className="game">
         <div className="game-board">
@@ -90,6 +110,7 @@ class Game extends React.Component {
         </div>
         <div className="game-info">
           <div>{status}</div>
+          {switcher}
           <ol>{moves}</ol>
         </div>
       </div>
